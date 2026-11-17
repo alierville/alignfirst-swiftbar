@@ -33,11 +33,12 @@ jobs:
 
       - run: npx alignfirst docmap --check
 
-      # workspace-bar calls /usr/sbin/lsof, the macOS path. On Linux, a fake one prints the
-      # listening ports the end-to-end test expects.
-      - name: Install fake lsof
+      # workspace-bar calls /usr/sbin/lsof, the macOS path. On Linux, a shim there hands the
+      # call to the real lsof, so the end-to-end test observes the real listening sockets.
+      - name: Install lsof shim
         run: |
           test ! -e /usr/sbin/lsof
-          sudo install -m 755 test/fixtures/fake-lsof.sh /usr/sbin/lsof
+          test -x /usr/bin/lsof
+          sudo install -m 755 test/fixtures/linux-lsof.sh /usr/sbin/lsof
 
       - run: npm run test:e2e

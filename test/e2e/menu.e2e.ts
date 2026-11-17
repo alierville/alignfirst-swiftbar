@@ -9,10 +9,8 @@ import {
   existsSync,
   mkdirSync,
   mkdtempSync,
-  readFileSync,
   realpathSync,
   rmSync,
-  writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
@@ -41,7 +39,6 @@ const env: NodeJS.ProcessEnv = {
   GIT_COMMITTER_EMAIL: "e2e@example.invalid",
   WORKSPACE_BAR_HOME: join(tmp, "workspace-bar"),
   WORKSPACE_BAR_PLUGIN: join(tmp, "plugin.sh"),
-  WORKSPACE_BAR_FAKE_LSOF: join(tmp, "lsof.txt"),
 };
 
 function run(file: string, args: string[], cwd: string): string {
@@ -69,21 +66,6 @@ function worktree(data: Snapshot, branch: string): PublicWorktree {
   return found;
 }
 
-/** What `lsof -F pcn` prints when feature's dev server listens: read by the fake lsof on Linux. */
-function writeFakeLsof(): void {
-  const registry = join(main, ".local-wt", "workspace-registry");
-  const workspaces = JSON.parse(readFileSync(join(registry, "workspaces.json"), "utf8")) as {
-    workspaces: Record<string, { worktree: string; ports?: Record<string, number> }>;
-  };
-  const port = Object.values(workspaces.workspaces).find((entry) => entry.worktree === feature)
-    ?.ports?.web;
-  assert.ok(port, "no web port allocated for feature");
-  writeFileSync(
-    env.WORKSPACE_BAR_FAKE_LSOF as string,
-    `p${process.pid}\ncnode\nn127.0.0.1:${port}\n`,
-  );
-}
-
 before(() => {
   mkdirSync(env.HOME as string);
   mkdirSync(main);
@@ -106,7 +88,6 @@ before(() => {
   alignfirst(["dev", "up"], feature);
   git(["worktree", "add", "-q", "-b", "bare-wt", bare]);
 
-  writeFakeLsof();
   workspaceBar("add", main);
 });
 

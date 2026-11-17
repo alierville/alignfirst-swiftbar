@@ -21,7 +21,7 @@ Unit tests cover the pure parsers and renderers (registry, `git worktree list`, 
 
 The end-to-end test builds a real project from `test/fixtures/e2e-project/` in a temp folder, with a temp `HOME`: the pinned `alignfirst` dev dependency creates its workspaces, ports (47300–47399) and dev server, then the test runs `src/cli.ts` as SwiftBar would and clicks a harmless `run` entry. It needs git. Bumping the `alignfirst` dev dependency is the contract test for a new registry format (see "Registry formats" in `docs/architecture.md`).
 
-`src/system.ts` calls `/usr/sbin/lsof`, a macOS path. On Linux CI, `test/fixtures/fake-lsof.sh` is installed there: it prints the `lsof -F pcn` output that the e2e test writes to `WORKSPACE_BAR_FAKE_LSOF`. On macOS the real `lsof` sees the real dev server.
+`src/system.ts` calls `/usr/sbin/lsof`, a macOS path. On Linux CI, `test/fixtures/linux-lsof.sh` is installed there and execs Linux's `/usr/bin/lsof`: on both systems the status dots of the e2e test come from the real dev server's socket.
 
 Biome leaves Markdown alone (Docmap frontmatter) and allows `${…}` in plain strings in `src/project-config.ts` and `test/`, where it is the project file's template syntax.
 
