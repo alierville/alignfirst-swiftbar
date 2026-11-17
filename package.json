@@ -3,13 +3,19 @@
   "private": true,
   "type": "module",
   "description": "Endpoints des workspaces AlignFirst dans la barre des menus macOS (SwiftBar)",
-  "engines": { "node": ">=24" },
+  "engines": {
+    "node": ">=24"
+  },
   "scripts": {
     "test": "node --test --disable-warning=ExperimentalWarning test/",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "lint": "biome check .",
+    "format": "biome check --write ."
   },
   "devDependencies": {
+    "@biomejs/biome": "2.6.8",
     "@types/node": "24.10.1",
     "typescript": "5.9.3"
-  }
+  },
+  "license": "MIT"
 }

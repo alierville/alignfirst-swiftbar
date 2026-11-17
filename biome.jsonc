@@ -1,0 +1,17 @@
+{
+  "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
+  "vcs": { "enabled": true, "clientKind": "git", "useIgnoreFile": true },
+  "formatter": { "enabled": true, "indentStyle": "space", "indentWidth": 2, "lineWidth": 100 },
+  "javascript": { "formatter": { "quoteStyle": "double" } },
+  // Docs are prose with YAML frontmatter read by Docmap: Biome leaves them as written.
+  "markdown": { "formatter": { "enabled": false }, "linter": { "enabled": false } },
+  "linter": { "enabled": true, "rules": { "preset": "recommended" } },
+  "assist": { "enabled": true, "actions": { "source": { "organizeImports": "on" } } },
+  "overrides": [
+    {
+      // `${ports.x}`, `${worktree}`, `${branch}` are the project file's template syntax, not JS templates.
+      "includes": ["src/project-config.ts", "test/**"],
+      "linter": { "rules": { "suspicious": { "noTemplateCurlyInString": "off" } } }
+    }
+  ]
+}
