@@ -2,6 +2,8 @@
 
 Les endpoints des workspaces AlignFirst dans la barre des menus macOS, via [SwiftBar](https://github.com/swiftbar/SwiftBar).
 
+workspace-bar se greffe sur les workspaces d'[AlignFirst](https://github.com/paleo/alignfirst) : il lit leur registre, leurs ports et leurs serveurs de dev, sans rien y modifier.
+
 Pour chaque dépôt suivi : chaque worktree, sa branche, et ses endpoints cliquables (navigateur, TablePlus, copie, Terminal, Claude Code), avec une pastille 🟢/🔴 selon que le port écoute.
 
 ```
@@ -100,7 +102,15 @@ Limite : `lsof` sans `sudo` ne voit que tes processus. Ça couvre Docker Desktop
 
 ## Développement
 
-```sh
-npm test
-npm install && npm run typecheck
-```
+Voir [DEVELOPERS.md](DEVELOPERS.md).
+
+## Crédits
+
+- [AlignFirst](https://github.com/paleo/alignfirst), de Thomas Mur (Paleo), sous licence CC0 ([site](https://alignfirst.paroi.tech)) : les workspaces, leur registre et leurs serveurs de dev, sur lesquels workspace-bar s'appuie entièrement.
+- [SwiftBar](https://github.com/swiftbar/SwiftBar), qui affiche le menu.
+
+workspace-bar est un outil indépendant et non officiel : il n'est ni développé ni maintenu par l'auteur d'AlignFirst.
+
+## Licence
+
+MIT, voir [LICENSE](LICENSE).

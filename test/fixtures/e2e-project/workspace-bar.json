@@ -1,0 +1,13 @@
+{
+  "name": "E2E",
+  "endpoints": [
+    { "label": "Web", "open": "http://localhost:${ports.web}", "port": "web" },
+    {
+      "label": "DB",
+      "open": "postgres://user:e2e-secret-password@localhost:${ports.db}/db",
+      "port": "db"
+    },
+    { "label": "Secret", "copy": "e2e-secret-copy" },
+    { "label": "Marker", "run": ["/usr/bin/touch", "${worktree}/clicked"] }
+  ]
+}

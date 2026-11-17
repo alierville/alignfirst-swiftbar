@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "devServer": {
+    "ports": { "first": 47300, "last": 47399, "declare": ["web", "db"] },
+    "servers": [
+      {
+        "kind": "spawn",
+        "name": "web",
+        "exec": { "run": ["node", "server.mjs"], "env": { "PORT": "${{ ports.web }}" } },
+        "port": "web",
+        "ready": { "log": "listening" }
+      }
+    ]
+  }
+}

@@ -21,19 +21,25 @@ function detached(file: string, args: string[], cwd?: string): void {
 export function runAction(action: Action): void {
   switch (action.type) {
     case "open":
-      return detached(OPEN, [action.target]);
+      detached(OPEN, [action.target]);
+      return;
     case "openWith":
-      return detached(OPEN, ["-a", action.app, action.target]);
+      detached(OPEN, ["-a", action.app, action.target]);
+      return;
     case "copy":
       execFileSync(PBCOPY, [], { input: action.value, timeout: 5000 });
       return;
     case "terminal":
-      return detached(OPEN, ["-a", "Terminal", action.dir]);
+      detached(OPEN, ["-a", "Terminal", action.dir]);
+      return;
     case "finder":
-      return detached(OPEN, [action.dir]);
+      detached(OPEN, [action.dir]);
+      return;
     case "claude":
-      return detached(OSASCRIPT, [...CLAUDE_SCRIPT.flatMap((line) => ["-e", line]), action.dir]);
+      detached(OSASCRIPT, [...CLAUDE_SCRIPT.flatMap((line) => ["-e", line]), action.dir]);
+      return;
     case "run":
-      return detached(action.argv[0], action.argv.slice(1), action.cwd);
+      detached(action.argv[0], action.argv.slice(1), action.cwd);
+      return;
   }
 }
