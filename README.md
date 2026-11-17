@@ -88,6 +88,8 @@ Une entrée a un `label` et une seule action :
 
 `port` (nom de port AlignFirst ou nombre) choisit le port surveillé par la pastille ; il est déduit d'une URL locale sinon. Les clés inconnues sont refusées.
 
+Tant qu'AlignFirst n'a pas attribué de ports au worktree (`npx alignfirst dev setup` pas encore lancé), les entrées qui en utilisent un apparaissent grisées, « port non attribué » ; les autres restent cliquables. Une fois les ports attribués, un port inconnu est une erreur du fichier de projet, signalée dans le menu.
+
 ## Sécurité
 
 - **Le menu et le JSON ne contiennent aucune valeur.** Ils n'ont que des libellés, des `hôte:port/chemin` sans identifiants, sans query ni fragment, et des ids. Un clic rappelle `open` avec des ids. L'action est recalculée à ce moment-là, et la valeur ne transite ni par SwiftBar ni par ses logs.

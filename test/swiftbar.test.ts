@@ -62,6 +62,17 @@ test("menu: count, project, worktree dot, endpoint dots, clicks by id", () => {
   );
 });
 
+test("an unavailable endpoint is greyed out, without a click", () => {
+  const pending = structuredClone(project);
+  pending.worktrees[0].endpoints = [
+    { id: "console", label: "Console", kind: "action", unavailable: "port non attribué" },
+  ];
+  assert.match(
+    renderSwiftBar([pending], "/plugin"),
+    /\n----Console {3}port non attribué \| disabled=true\n/,
+  );
+});
+
 test("labels cannot inject SwiftBar parameters or lines", () => {
   assert.equal(menuText("--evil | bash=/bin/sh\nnext"), "evil ¦ bash=/bin/sh next");
 });

@@ -8,6 +8,12 @@ export const PROJECT_FILE = join(".local", "workspace-bar.json");
 
 export class ProjectFileError extends Error {}
 
+/** A `${ports.x}` or `port` the worktree does not have. */
+export class MissingPortError extends ProjectFileError {}
+
+/** Shown on an entry while its worktree has no AlignFirst ports yet. */
+export const PORT_NOT_ALLOCATED = "port non attribué";
+
 /** What a worktree offers to templates. */
 export interface TemplateContext {
   ports: Record<string, number>;
@@ -120,7 +126,7 @@ export function renderTemplate(text: string, context: TemplateContext): string {
     if (key.startsWith("ports.")) {
       const port = context.ports[key.slice("ports.".length)];
       if (port === undefined)
-        throw new ProjectFileError(`\${${key}} : port inconnu de ce worktree`);
+        throw new MissingPortError(`\${${key}} : port inconnu de ce worktree`);
       return String(port);
     }
     throw new ProjectFileError(`\${${key}} : variable inconnue (ports.<nom>, worktree, branch)`);
@@ -160,37 +166,51 @@ function entryAction(entry: EntryDeclaration, context: TemplateContext): Action 
   return { type: "finder", dir: context.worktree };
 }
 
-/** The endpoints a project file declares, resolved for one worktree. */
+/**
+ * The endpoints a project file declares, resolved for one worktree. While the worktree has no
+ * AlignFirst ports (`alignfirst dev setup` not run yet), entries that need one are unavailable
+ * instead of failing; once it has ports, a missing one is a mistake in the project file.
+ */
 export function resolveEndpoints(config: ProjectConfig, context: TemplateContext): Endpoint[] {
   const ids = new Set<string>();
+  const allocated = Object.keys(context.ports).length > 0;
   return config.endpoints.map((entry) => {
-    const action = entryAction(entry, context);
-    const endpoint: Endpoint = {
-      id: uniqueId(slug(entry.id ?? entry.label), ids),
-      label: entry.label,
-      kind: "action",
-      action,
-    };
-    if (action.type === "open" || action.type === "openWith") {
-      const url = describeUrl(action.target);
-      if (url) {
-        endpoint.kind = /^https?:/.test(action.target) ? "web" : "database";
-        endpoint.display = url.display;
-        endpoint.port = url.localPort;
-      }
+    const id = uniqueId(slug(entry.id ?? entry.label), ids);
+    try {
+      return resolveEntry(entry, id, context);
+    } catch (error) {
+      if (allocated || !(error instanceof MissingPortError)) throw error;
+      return {
+        id,
+        label: entry.label,
+        kind: "action",
+        action: null,
+        unavailable: PORT_NOT_ALLOCATED,
+      };
     }
-    if (typeof entry.port === "number") endpoint.port = entry.port;
-    else if (typeof entry.port === "string") {
-      const port = context.ports[entry.port];
-      if (port === undefined)
-        throw new ProjectFileError(
-          `« ${entry.label} » : port ${entry.port} inconnu de ce worktree`,
-        );
-      endpoint.port = port;
-    }
-    if (action.type === "copy") endpoint.secret = entry.secret ?? true;
-    return endpoint;
   });
+}
+
+function resolveEntry(entry: EntryDeclaration, id: string, context: TemplateContext): Endpoint {
+  const action = entryAction(entry, context);
+  const endpoint: Endpoint = { id, label: entry.label, kind: "action", action };
+  if (action.type === "open" || action.type === "openWith") {
+    const url = describeUrl(action.target);
+    if (url) {
+      endpoint.kind = /^https?:/.test(action.target) ? "web" : "database";
+      endpoint.display = url.display;
+      endpoint.port = url.localPort;
+    }
+  }
+  if (typeof entry.port === "number") endpoint.port = entry.port;
+  else if (typeof entry.port === "string") {
+    const port = context.ports[entry.port];
+    if (port === undefined)
+      throw new MissingPortError(`« ${entry.label} » : port ${entry.port} inconnu de ce worktree`);
+    endpoint.port = port;
+  }
+  if (action.type === "copy") endpoint.secret = entry.secret ?? true;
+  return endpoint;
 }
 
 /** Without a project file: the worktree's AlignFirst ports, each copying `localhost:<port>`. */

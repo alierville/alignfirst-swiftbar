@@ -41,6 +41,9 @@ function endpointLine(
   worktree: PublicWorktree,
   endpoint: PublicEndpoint,
 ): string {
+  if (endpoint.unavailable) {
+    return `----${menuText(endpoint.label)}   ${menuText(endpoint.unavailable)} | disabled=true`;
+  }
   const label = menuText(endpoint.label) + (endpoint.secret ? " 🔑" : "");
   const display = endpoint.display ? `   ${menuText(endpoint.display)}` : "";
   const params = clickParams(plugin, ["open", project.key, worktree.key, endpoint.id]);

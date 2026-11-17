@@ -22,7 +22,10 @@ export interface Endpoint {
   port?: number;
   /** The action puts a secret in the clipboard: shown with a key. */
   secret?: boolean;
-  action: Action;
+  /** Null when the endpoint cannot be resolved yet: see `unavailable`. */
+  action: Action | null;
+  /** Why the endpoint cannot be used yet (e.g. its port is not allocated): shown greyed out. */
+  unavailable?: string;
 }
 
 export interface PublicEndpoint {
@@ -33,6 +36,7 @@ export interface PublicEndpoint {
   port?: number;
   listening?: boolean;
   secret?: boolean;
+  unavailable?: string;
 }
 
 export type WorktreeStatus = "up" | "partial" | "down" | "unknown";

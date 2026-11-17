@@ -29,7 +29,7 @@ A CLI (`src/cli.ts`) that SwiftBar calls every N seconds to print a menu, and ca
 
 `swiftbar` / `json` → `listeningPorts()` (one `lsof`) → for each followed project `collectProject()` → `toPublic()` → render or print. A failure in one project becomes `project.error` or `worktree.error` and is shown in the menu; it never breaks the other projects.
 
-Worktrees are the union of `git worktree list` and the registry: a registry entry without a folder is an orphan, a git worktree without ports is "non provisionné". Without a project file, endpoints fall back to one copy entry per AlignFirst port.
+Worktrees are the union of `git worktree list` and the registry: a registry entry without a folder is an orphan, a git worktree without ports is "non provisionné". Without a project file, endpoints fall back to one copy entry per AlignFirst port. AlignFirst allocates ports at `alignfirst dev setup`, not at `workspace setup`: until then, project-file entries that need a port get `action: null` and `unavailable` (greyed out, no click); once the worktree has ports, a missing one is a project-file error.
 
 ## Click
 

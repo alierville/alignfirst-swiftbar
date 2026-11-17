@@ -87,6 +87,34 @@ test("declared endpoints, in order, with ports for the status dots", () => {
   });
 });
 
+test("before AlignFirst allocates ports, entries that need one are unavailable", () => {
+  const config = checkConfig({
+    endpoints: [
+      { label: "Console", open: "http://localhost:${ports.console}" },
+      { label: "Remote", open: "https://example.com", port: "api" },
+      { label: "Terminal", terminal: true },
+    ],
+  });
+  const endpoints = resolveEndpoints(config, { ...context, ports: {} });
+  assert.deepEqual(
+    endpoints.map((endpoint) => [endpoint.id, endpoint.action?.type ?? null, endpoint.unavailable]),
+    [
+      ["console", null, "port non attribué"],
+      ["remote", null, "port non attribué"],
+      ["terminal", "terminal", undefined],
+    ],
+  );
+  // Once the worktree has ports, a missing one is a mistake in the project file.
+  assert.throws(
+    () =>
+      resolveEndpoints(
+        checkConfig({ endpoints: [{ label: "X", open: "${ports.nope}" }] }),
+        context,
+      ),
+    /port inconnu/,
+  );
+});
+
 test("the file shape is checked strictly", () => {
   assert.throws(() => checkConfig([]), /objet JSON/);
   assert.throws(() => checkConfig({ endpoints: {} }), /liste/);

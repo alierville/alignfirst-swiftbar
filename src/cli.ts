@@ -68,6 +68,7 @@ function open(projectKey: string, worktreeKey: string, endpointId: string): void
     .find((worktree) => worktree.key === worktreeKey)
     ?.endpoints.find((candidate) => candidate.id === endpointId);
   if (!endpoint) fail(`endpoint introuvable : ${worktreeKey}/${endpointId}`);
+  if (!endpoint.action) fail(`${endpoint.label} : ${endpoint.unavailable ?? "indisponible"}`);
   runAction(endpoint.action);
 }
 

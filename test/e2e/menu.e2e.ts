@@ -148,13 +148,27 @@ test("worktrees, dev server and status dots come from the real AlignFirst setup"
   assert.equal(listening.web, true);
   assert.equal(listening.db, false);
 
-  assert.equal(worktree(data, "bare-wt").prepared, false);
+  // No ports before `alignfirst dev setup`: entries that need one wait, the others work.
+  const bareTree = worktree(data, "bare-wt");
+  assert.equal(bareTree.prepared, false);
+  assert.equal(bareTree.error, undefined);
+  const unavailable = Object.fromEntries(
+    bareTree.endpoints.map((endpoint) => [endpoint.id, endpoint.unavailable]),
+  );
+  assert.deepEqual(unavailable, {
+    web: "port non attribué",
+    db: "port non attribué",
+    secret: undefined,
+    marker: undefined,
+  });
 });
 
 test("the SwiftBar menu shows the dev server and the unprepared worktree", () => {
   const menu = workspaceBar("swiftbar");
   assert.match(menu, /🟠 feature {2}· dev/);
   assert.match(menu, /non provisionné/);
+  assert.match(menu, /Web {3}port non attribué \| disabled=true/);
+  assert.doesNotMatch(menu, /port inconnu/);
 });
 
 test("no secret reaches the JSON or the menu", () => {
