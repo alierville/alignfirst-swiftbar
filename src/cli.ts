@@ -1,5 +1,14 @@
 import { execFileSync } from "node:child_process";
-import { chmodSync, existsSync, lstatSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import {
+  chmodSync,
+  existsSync,
+  lstatSync,
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -36,7 +45,10 @@ function fail(text: string): never {
 function snapshot(): Snapshot {
   const listening = listeningPorts();
   const projects = readProjects().map(collectProject);
-  return { generatedAt: new Date().toISOString(), projects: projects.map((project) => toPublic(project, listening)) };
+  return {
+    generatedAt: new Date().toISOString(),
+    projects: projects.map((project) => toPublic(project, listening)),
+  };
 }
 
 function resolveMain(dir: string | undefined): string {
@@ -61,9 +73,13 @@ function open(projectKey: string, worktreeKey: string, endpointId: string): void
 
 function swiftBarPluginDirectory(): string {
   try {
-    return execFileSync("/usr/bin/defaults", ["read", "com.ameba.SwiftBar", "PluginDirectory"], { encoding: "utf8" }).trim();
+    return execFileSync("/usr/bin/defaults", ["read", "com.ameba.SwiftBar", "PluginDirectory"], {
+      encoding: "utf8",
+    }).trim();
   } catch {
-    fail("dossier de plugins SwiftBar inconnu : lancez SwiftBar une fois et choisissez-le, ou passez-le en argument");
+    fail(
+      "dossier de plugins SwiftBar inconnu : lancez SwiftBar une fois et choisissez-le, ou passez-le en argument",
+    );
   }
 }
 
@@ -81,11 +97,14 @@ function writeExecutable(path: string, content: string): void {
  * back on click) and the plugin in the SwiftBar folder, which only calls the launcher.
  */
 function install(dir: string | undefined, interval: string): void {
-  if (!/^[1-9][0-9]*[smhd]$/.test(interval)) fail(`intervalle invalide : ${interval} (ex. 30s, 5m, 1h)`);
+  if (!/^[1-9][0-9]*[smhd]$/.test(interval))
+    fail(`intervalle invalide : ${interval} (ex. 30s, 5m, 1h)`);
   const target = resolve(dir ?? swiftBarPluginDirectory());
   // SwiftBar keeps each plugin's data there, as folders it would then try to load as plugins.
   if (target.startsWith(join(homedir(), "Library", "Application Support", "SwiftBar"))) {
-    fail("dossier de données de SwiftBar : choisissez un dossier de plugins distinct (ex. ~/.config/swiftbar-plugins)");
+    fail(
+      "dossier de données de SwiftBar : choisissez un dossier de plugins distinct (ex. ~/.config/swiftbar-plugins)",
+    );
   }
   mkdirSync(target, { recursive: true });
   mkdirSync(storeDir(), { recursive: true, mode: 0o700 });
@@ -123,9 +142,13 @@ function init(dir: string | undefined): void {
   const path = join(main, PROJECT_FILE);
   if (existsSync(path)) fail(`existe déjà : ${path}`);
   mkdirSync(join(main, ".local"), { recursive: true, mode: 0o700 });
-  if (!isIgnoredByGit(main, PROJECT_FILE)) fail(`${PROJECT_FILE} n'est pas ignoré par git dans ${main} : ajoutez .local/ au .gitignore`);
-  if (lstatSync(join(main, ".local")).mode & 0o022) fail(`${join(main, ".local")} est modifiable par d'autres : chmod go-w`);
-  writeFileSync(path, readFileSync(join(ROOT, "templates", "workspace-bar.json"), "utf8"), { mode: 0o600 });
+  if (!isIgnoredByGit(main, PROJECT_FILE))
+    fail(`${PROJECT_FILE} n'est pas ignoré par git dans ${main} : ajoutez .local/ au .gitignore`);
+  if (lstatSync(join(main, ".local")).mode & 0o022)
+    fail(`${join(main, ".local")} est modifiable par d'autres : chmod go-w`);
+  writeFileSync(path, readFileSync(join(ROOT, "templates", "workspace-bar.json"), "utf8"), {
+    mode: 0o600,
+  });
   process.stdout.write(`créé : ${path}\n`);
 }
 
@@ -134,7 +157,8 @@ async function main(args: string[]): Promise<void> {
   switch (command) {
     case "add": {
       const path = resolveMain(rest[0]);
-      if (!existsSync(registryDir(path))) process.stderr.write("attention : aucun registre AlignFirst pour l'instant\n");
+      if (!existsSync(registryDir(path)))
+        process.stderr.write("attention : aucun registre AlignFirst pour l'instant\n");
       const entry = addProject(path);
       process.stdout.write(`suivi : ${entry.key} → ${entry.path}\n`);
       return;
@@ -156,7 +180,8 @@ async function main(args: string[]): Promise<void> {
       return;
     case "swiftbar": {
       const plugin = process.env.WORKSPACE_BAR_PLUGIN;
-      if (!plugin) fail("à lancer par le plugin SwiftBar (voir install), ou avec WORKSPACE_BAR_PLUGIN");
+      if (!plugin)
+        fail("à lancer par le plugin SwiftBar (voir install), ou avec WORKSPACE_BAR_PLUGIN");
       process.stdout.write(renderSwiftBar(snapshot().projects, plugin));
       return;
     }

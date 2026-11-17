@@ -9,12 +9,22 @@ export const PBCOPY = "/usr/bin/pbcopy";
 export const OSASCRIPT = "/usr/bin/osascript";
 
 function run(file: string, args: string[]): string {
-  return execFileSync(file, args, { encoding: "utf8", timeout: 5000, stdio: ["ignore", "pipe", "ignore"] });
+  return execFileSync(file, args, {
+    encoding: "utf8",
+    timeout: 5000,
+    stdio: ["ignore", "pipe", "ignore"],
+  });
 }
 
 /** Main worktree of the repository containing `dir`. */
 export function mainWorktreeOf(dir: string): string {
-  const common = run(GIT, ["-C", dir, "rev-parse", "--path-format=absolute", "--git-common-dir"]).trim();
+  const common = run(GIT, [
+    "-C",
+    dir,
+    "rev-parse",
+    "--path-format=absolute",
+    "--git-common-dir",
+  ]).trim();
   return common.endsWith("/.git") ? dirname(common) : resolve(common);
 }
 
@@ -72,7 +82,10 @@ export function listeningPorts(): Map<number, string> | null {
 /** True when git ignores `relative` in `repo` and does not track it. */
 export function isIgnoredByGit(repo: string, relative: string): boolean {
   try {
-    execFileSync(GIT, ["-C", repo, "check-ignore", "-q", "--", relative], { timeout: 5000, stdio: "ignore" });
+    execFileSync(GIT, ["-C", repo, "check-ignore", "-q", "--", relative], {
+      timeout: 5000,
+      stdio: "ignore",
+    });
     return true;
   } catch {
     return false;

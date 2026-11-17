@@ -14,10 +14,17 @@ import {
 } from "../src/project-config.ts";
 import type { Project } from "../src/types.ts";
 
-const context = { ports: { postgres: 8300, api: 8301, console: 8302 }, worktree: "/work/tree", branch: "53/bar" };
+const context = {
+  ports: { postgres: 8300, api: 8301, console: 8302 },
+  worktree: "/work/tree",
+  branch: "53/bar",
+};
 
 test("templates know ports, worktree and branch, nothing else", () => {
-  assert.equal(renderTemplate("http://localhost:${ports.api}/x", context), "http://localhost:8301/x");
+  assert.equal(
+    renderTemplate("http://localhost:${ports.api}/x", context),
+    "http://localhost:8301/x",
+  );
   assert.equal(renderTemplate("${worktree} ${ branch }", context), "/work/tree 53/bar");
   assert.throws(() => renderTemplate("${ports.nope}", context), /port inconnu/);
   assert.throws(() => renderTemplate("${env.OPENAI_API_KEY}", context), /variable inconnue/);
@@ -25,8 +32,14 @@ test("templates know ports, worktree and branch, nothing else", () => {
 });
 
 test("displays never carry credentials, queries or fragments", () => {
-  assert.deepEqual(describeUrl("postgres://u:pw@localhost:8300/db"), { display: "localhost:8300/db", localPort: 8300 });
-  assert.deepEqual(describeUrl("https://user:pw@example.com/a?token=x#f"), { display: "example.com/a", localPort: undefined });
+  assert.deepEqual(describeUrl("postgres://u:pw@localhost:8300/db"), {
+    display: "localhost:8300/db",
+    localPort: 8300,
+  });
+  assert.deepEqual(describeUrl("https://user:pw@example.com/a?token=x#f"), {
+    display: "example.com/a",
+    localPort: undefined,
+  });
   assert.equal(describeUrl("not a url"), null);
 });
 
@@ -45,7 +58,13 @@ test("declared endpoints, in order, with ports for the status dots", () => {
   });
   const endpoints = resolveEndpoints(config, context);
   assert.deepEqual(
-    endpoints.map((endpoint) => [endpoint.id, endpoint.kind, endpoint.display, endpoint.port, endpoint.secret]),
+    endpoints.map((endpoint) => [
+      endpoint.id,
+      endpoint.kind,
+      endpoint.display,
+      endpoint.port,
+      endpoint.secret,
+    ]),
     [
       ["console", "web", "localhost:8302", 8302, undefined],
       ["base", "database", "localhost:8300/db", 8300, undefined],
@@ -56,8 +75,16 @@ test("declared endpoints, in order, with ports for the status dots", () => {
       ["code", "action", undefined, undefined, undefined],
     ],
   );
-  assert.deepEqual(endpoints[1].action, { type: "openWith", app: "Postico", target: "postgres://u:pw@localhost:8300/db" });
-  assert.deepEqual(endpoints[6].action, { type: "run", argv: ["/usr/local/bin/code", "/work/tree"], cwd: "/work/tree" });
+  assert.deepEqual(endpoints[1].action, {
+    type: "openWith",
+    app: "Postico",
+    target: "postgres://u:pw@localhost:8300/db",
+  });
+  assert.deepEqual(endpoints[6].action, {
+    type: "run",
+    argv: ["/usr/local/bin/code", "/work/tree"],
+    cwd: "/work/tree",
+  });
 });
 
 test("the file shape is checked strictly", () => {
@@ -65,17 +92,40 @@ test("the file shape is checked strictly", () => {
   assert.throws(() => checkConfig({ endpoints: {} }), /liste/);
   assert.throws(() => checkConfig({ endpoints: [], extra: 1 }), /clé inconnue extra/);
   assert.throws(() => checkConfig({ endpoints: [{ label: "x" }] }), /une seule action/);
-  assert.throws(() => checkConfig({ endpoints: [{ label: "x", copy: "a", open: "b" }] }), /une seule action/);
-  assert.throws(() => checkConfig({ endpoints: [{ label: "x", copy: "a", app: "B" }] }), /app ne va qu'avec open/);
-  assert.throws(() => checkConfig({ endpoints: [{ label: "x", run: ["code", "."] }] }), /chemin absolu/);
+  assert.throws(
+    () => checkConfig({ endpoints: [{ label: "x", copy: "a", open: "b" }] }),
+    /une seule action/,
+  );
+  assert.throws(
+    () => checkConfig({ endpoints: [{ label: "x", copy: "a", app: "B" }] }),
+    /app ne va qu'avec open/,
+  );
+  assert.throws(
+    () => checkConfig({ endpoints: [{ label: "x", run: ["code", "."] }] }),
+    /chemin absolu/,
+  );
   assert.throws(() => checkConfig({ endpoints: [{ label: "x", terminal: "yes" }] }), /booléen/);
-  assert.throws(() => checkConfig({ endpoints: [{ label: "x", copy: "a", shell: "rm" }] }), /clé inconnue shell/);
-  assert.throws(() => resolveEndpoints(checkConfig({ endpoints: [{ label: "x", copy: "a", port: "nope" }] }), context), /port nope/);
+  assert.throws(
+    () => checkConfig({ endpoints: [{ label: "x", copy: "a", shell: "rm" }] }),
+    /clé inconnue shell/,
+  );
+  assert.throws(
+    () =>
+      resolveEndpoints(
+        checkConfig({ endpoints: [{ label: "x", copy: "a", port: "nope" }] }),
+        context,
+      ),
+    /port nope/,
+  );
 });
 
 test("without a project file, the AlignFirst ports alone", () => {
   assert.deepEqual(
-    portEndpoints({ api: 8301 }).map((endpoint) => [endpoint.id, endpoint.display, endpoint.action]),
+    portEndpoints({ api: 8301 }).map((endpoint) => [
+      endpoint.id,
+      endpoint.display,
+      endpoint.action,
+    ]),
     [["api", "localhost:8301", { type: "copy", value: "localhost:8301" }]],
   );
 });
@@ -94,7 +144,18 @@ test("the public view drops every action, so no copied value or password", () =>
     key: "p",
     name: "p",
     path: "/work/tree",
-    worktrees: [{ key: "w", path: "/work/tree", branch: "main", main: true, prepared: true, devServer: false, ports: {}, endpoints }],
+    worktrees: [
+      {
+        key: "w",
+        path: "/work/tree",
+        branch: "main",
+        main: true,
+        prepared: true,
+        devServer: false,
+        ports: {},
+        endpoints,
+      },
+    ],
   };
   const text = JSON.stringify(toPublic(project, new Map([[8300, "postgres"]])));
   assert.doesNotMatch(text, /top-secret|u:pw|"action":/);

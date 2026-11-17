@@ -2,7 +2,11 @@
   "name": "Mon projet",
   "endpoints": [
     { "label": "App", "open": "http://localhost:${ports.web}", "port": "web" },
-    { "label": "Base de données", "open": "postgres://user:password@localhost:${ports.postgres}/db", "port": "postgres" },
+    {
+      "label": "Base de données",
+      "open": "postgres://user:password@localhost:${ports.postgres}/db",
+      "port": "postgres"
+    },
     { "label": "Compte de test", "copy": "user@example.local password" },
     { "label": "Terminal ici", "terminal": true },
     { "label": "Claude Code ici", "claude": true },

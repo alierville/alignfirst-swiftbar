@@ -19,7 +19,8 @@ export function readProjects(): ProjectEntry[] {
     const data = JSON.parse(readFileSync(storeFile(), "utf8")) as { projects?: unknown };
     if (!Array.isArray(data.projects)) return [];
     return data.projects.filter(
-      (entry): entry is ProjectEntry => typeof entry?.key === "string" && typeof entry?.path === "string",
+      (entry): entry is ProjectEntry =>
+        typeof entry?.key === "string" && typeof entry?.path === "string",
     );
   } catch {
     return [];
@@ -30,7 +31,9 @@ function writeProjects(projects: ProjectEntry[]): void {
   mkdirSync(storeDir(), { recursive: true, mode: 0o700 });
   chmodSync(storeDir(), 0o700);
   const temporary = `${storeFile()}.tmp`;
-  writeFileSync(temporary, `${JSON.stringify({ version: 1, projects }, null, 2)}\n`, { mode: 0o600 });
+  writeFileSync(temporary, `${JSON.stringify({ version: 1, projects }, null, 2)}\n`, {
+    mode: 0o600,
+  });
   renameSync(temporary, storeFile());
 }
 

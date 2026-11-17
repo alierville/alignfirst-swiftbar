@@ -27,8 +27,10 @@ export function assertSafeFile(path: string, uid: number | undefined = process.g
   ] as const) {
     const stat = lstatSync(target);
     if (stat.isSymbolicLink()) throw new ProjectFileError(`${label} refusé : lien symbolique`);
-    if (uid !== undefined && stat.uid !== uid) throw new ProjectFileError(`${label} refusé : n'appartient pas à l'utilisateur`);
-    if ((stat.mode & 0o022) !== 0) throw new ProjectFileError(`${label} refusé : modifiable par d'autres (chmod go-w)`);
+    if (uid !== undefined && stat.uid !== uid)
+      throw new ProjectFileError(`${label} refusé : n'appartient pas à l'utilisateur`);
+    if ((stat.mode & 0o022) !== 0)
+      throw new ProjectFileError(`${label} refusé : modifiable par d'autres (chmod go-w)`);
   }
 }
 
@@ -43,14 +45,18 @@ function checkEntry(value: unknown, index: number): EntryDeclaration {
   const where = `endpoints[${index}]`;
   if (!isRecord(value)) throw new ProjectFileError(`${where} : objet attendu`);
   const unknown = Object.keys(value).filter((key) => !ENTRY_KEYS.has(key));
-  if (unknown.length > 0) throw new ProjectFileError(`${where} : clé inconnue ${unknown.join(", ")}`);
-  if (typeof value.label !== "string" || value.label.trim() === "") throw new ProjectFileError(`${where} : label manquant`);
+  if (unknown.length > 0)
+    throw new ProjectFileError(`${where} : clé inconnue ${unknown.join(", ")}`);
+  if (typeof value.label !== "string" || value.label.trim() === "")
+    throw new ProjectFileError(`${where} : label manquant`);
   const label = `« ${value.label} »`;
   for (const key of ["id", "open", "app", "copy"] as const) {
-    if (value[key] !== undefined && typeof value[key] !== "string") throw new ProjectFileError(`${label} : ${key} doit être une chaîne`);
+    if (value[key] !== undefined && typeof value[key] !== "string")
+      throw new ProjectFileError(`${label} : ${key} doit être une chaîne`);
   }
   for (const key of ["secret", "terminal", "claude", "finder"] as const) {
-    if (value[key] !== undefined && typeof value[key] !== "boolean") throw new ProjectFileError(`${label} : ${key} doit être un booléen`);
+    if (value[key] !== undefined && typeof value[key] !== "boolean")
+      throw new ProjectFileError(`${label} : ${key} doit être un booléen`);
   }
   if (value.port !== undefined && typeof value.port !== "string" && !Number.isInteger(value.port)) {
     throw new ProjectFileError(`${label} : port doit être un nom de port ou un nombre`);
@@ -60,11 +66,14 @@ function checkEntry(value: unknown, index: number): EntryDeclaration {
     if (!Array.isArray(run) || run.length === 0 || !run.every((arg) => typeof arg === "string")) {
       throw new ProjectFileError(`${label} : run doit être une liste de chaînes`);
     }
-    if (!run[0].startsWith("/")) throw new ProjectFileError(`${label} : run[0] doit être un chemin absolu`);
+    if (!run[0].startsWith("/"))
+      throw new ProjectFileError(`${label} : run[0] doit être un chemin absolu`);
   }
   const actions = ACTION_KEYS.filter((key) => value[key] !== undefined && value[key] !== false);
-  if (actions.length !== 1) throw new ProjectFileError(`${label} : une seule action parmi ${ACTION_KEYS.join(", ")}`);
-  if (value.app !== undefined && actions[0] !== "open") throw new ProjectFileError(`${label} : app ne va qu'avec open`);
+  if (actions.length !== 1)
+    throw new ProjectFileError(`${label} : une seule action parmi ${ACTION_KEYS.join(", ")}`);
+  if (value.app !== undefined && actions[0] !== "open")
+    throw new ProjectFileError(`${label} : app ne va qu'avec open`);
   return value as unknown as EntryDeclaration;
 }
 
@@ -73,7 +82,8 @@ export function checkConfig(data: unknown): ProjectConfig {
   if (!isRecord(data)) throw new ProjectFileError("objet JSON attendu");
   const unknown = Object.keys(data).filter((key) => key !== "name" && key !== "endpoints");
   if (unknown.length > 0) throw new ProjectFileError(`clé inconnue ${unknown.join(", ")}`);
-  if (data.name !== undefined && typeof data.name !== "string") throw new ProjectFileError("name doit être une chaîne");
+  if (data.name !== undefined && typeof data.name !== "string")
+    throw new ProjectFileError("name doit être une chaîne");
   if (!Array.isArray(data.endpoints)) throw new ProjectFileError("endpoints doit être une liste");
   return { name: data.name, endpoints: data.endpoints.map(checkEntry) };
 }
@@ -87,7 +97,8 @@ export function loadProjectFile(mainWorktree: string): ProjectConfig | null {
     return null;
   }
   assertSafeFile(path);
-  if (!isIgnoredByGit(mainWorktree, PROJECT_FILE)) throw new ProjectFileError("refusé : le fichier doit être ignoré par git et non suivi");
+  if (!isIgnoredByGit(mainWorktree, PROJECT_FILE))
+    throw new ProjectFileError("refusé : le fichier doit être ignoré par git et non suivi");
   let data: unknown;
   try {
     data = JSON.parse(readFileSync(path, "utf8"));
@@ -108,7 +119,8 @@ export function renderTemplate(text: string, context: TemplateContext): string {
     }
     if (key.startsWith("ports.")) {
       const port = context.ports[key.slice("ports.".length)];
-      if (port === undefined) throw new ProjectFileError(`\${${key}} : port inconnu de ce worktree`);
+      if (port === undefined)
+        throw new ProjectFileError(`\${${key}} : port inconnu de ce worktree`);
       return String(port);
     }
     throw new ProjectFileError(`\${${key}} : variable inconnue (ports.<nom>, worktree, branch)`);
@@ -136,10 +148,13 @@ function entryAction(entry: EntryDeclaration, context: TemplateContext): Action 
   const render = (text: string) => renderTemplate(text, context);
   if (entry.open !== undefined) {
     const target = render(entry.open);
-    return entry.app !== undefined ? { type: "openWith", app: render(entry.app), target } : { type: "open", target };
+    return entry.app !== undefined
+      ? { type: "openWith", app: render(entry.app), target }
+      : { type: "open", target };
   }
   if (entry.copy !== undefined) return { type: "copy", value: render(entry.copy) };
-  if (entry.run !== undefined) return { type: "run", argv: entry.run.map(render), cwd: context.worktree };
+  if (entry.run !== undefined)
+    return { type: "run", argv: entry.run.map(render), cwd: context.worktree };
   if (entry.terminal) return { type: "terminal", dir: context.worktree };
   if (entry.claude) return { type: "claude", dir: context.worktree };
   return { type: "finder", dir: context.worktree };
@@ -150,7 +165,12 @@ export function resolveEndpoints(config: ProjectConfig, context: TemplateContext
   const ids = new Set<string>();
   return config.endpoints.map((entry) => {
     const action = entryAction(entry, context);
-    const endpoint: Endpoint = { id: uniqueId(slug(entry.id ?? entry.label), ids), label: entry.label, kind: "action", action };
+    const endpoint: Endpoint = {
+      id: uniqueId(slug(entry.id ?? entry.label), ids),
+      label: entry.label,
+      kind: "action",
+      action,
+    };
     if (action.type === "open" || action.type === "openWith") {
       const url = describeUrl(action.target);
       if (url) {
@@ -162,7 +182,10 @@ export function resolveEndpoints(config: ProjectConfig, context: TemplateContext
     if (typeof entry.port === "number") endpoint.port = entry.port;
     else if (typeof entry.port === "string") {
       const port = context.ports[entry.port];
-      if (port === undefined) throw new ProjectFileError(`« ${entry.label} » : port ${entry.port} inconnu de ce worktree`);
+      if (port === undefined)
+        throw new ProjectFileError(
+          `« ${entry.label} » : port ${entry.port} inconnu de ce worktree`,
+        );
       endpoint.port = port;
     }
     if (action.type === "copy") endpoint.secret = entry.secret ?? true;

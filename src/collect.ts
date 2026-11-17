@@ -1,12 +1,17 @@
 import { basename } from "node:path";
-import { loadProjectFile, PROJECT_FILE, portEndpoints, resolveEndpoints } from "./project-config.ts";
+import {
+  loadProjectFile,
+  PROJECT_FILE,
+  portEndpoints,
+  resolveEndpoints,
+} from "./project-config.ts";
 import { readRegistry } from "./registry.ts";
 import { gitWorktrees } from "./system.ts";
 import { slug, uniqueId } from "./text.ts";
 import type {
   Endpoint,
-  ProjectConfig,
   Project,
+  ProjectConfig,
   PublicEndpoint,
   PublicProject,
   PublicWorktree,
@@ -23,7 +28,10 @@ function message(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
-function toPublicEndpoint(endpoint: Endpoint, listening: Map<number, string> | null): PublicEndpoint {
+function toPublicEndpoint(
+  endpoint: Endpoint,
+  listening: Map<number, string> | null,
+): PublicEndpoint {
   const { action: _action, ...rest } = endpoint;
   const result: PublicEndpoint = rest;
   if (endpoint.port !== undefined && listening) result.listening = listening.has(endpoint.port);
@@ -49,18 +57,35 @@ export function toPublic(project: Project, listening: Map<number, string> | null
   };
 }
 
-function buildEndpoints(config: ProjectConfig | null, worktree: Omit<Worktree, "endpoints">): Pick<Worktree, "endpoints" | "error"> {
+function buildEndpoints(
+  config: ProjectConfig | null,
+  worktree: Omit<Worktree, "endpoints">,
+): Pick<Worktree, "endpoints" | "error"> {
   if (!config) return { endpoints: portEndpoints(worktree.ports) };
   try {
-    return { endpoints: resolveEndpoints(config, { ports: worktree.ports, worktree: worktree.path, branch: worktree.branch }) };
+    return {
+      endpoints: resolveEndpoints(config, {
+        ports: worktree.ports,
+        worktree: worktree.path,
+        branch: worktree.branch,
+      }),
+    };
   } catch (error) {
-    return { endpoints: portEndpoints(worktree.ports), error: `${PROJECT_FILE} : ${message(error)}` };
+    return {
+      endpoints: portEndpoints(worktree.ports),
+      error: `${PROJECT_FILE} : ${message(error)}`,
+    };
   }
 }
 
 /** Worktrees of a project, with their endpoints and actions (which may hold secrets). */
 export function collectProject(entry: ProjectEntry): Project {
-  const project: Project = { key: entry.key, name: basename(entry.path), path: entry.path, worktrees: [] };
+  const project: Project = {
+    key: entry.key,
+    name: basename(entry.path),
+    path: entry.path,
+    worktrees: [],
+  };
   let config: ProjectConfig | null = null;
   try {
     config = loadProjectFile(entry.path);
@@ -87,7 +112,11 @@ export function collectProject(entry: ProjectEntry): Project {
         ports: registered?.ports ?? {},
       };
       if (!tree) {
-        project.worktrees.push({ ...base, endpoints: [], error: "dossier absent (workspace orphelin)" });
+        project.worktrees.push({
+          ...base,
+          endpoints: [],
+          error: "dossier absent (workspace orphelin)",
+        });
         continue;
       }
       project.worktrees.push({ ...base, ...buildEndpoints(config, base) });

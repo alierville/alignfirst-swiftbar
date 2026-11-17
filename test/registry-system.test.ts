@@ -11,7 +11,9 @@ test("workspaces v4 are read, other versions fail closed", () => {
       broken: { ports: {} },
     },
   });
-  assert.deepEqual(workspaces, [{ name: "project", worktree: "/p", main: true, ports: { api: 8301 } }]);
+  assert.deepEqual(workspaces, [
+    { name: "project", worktree: "/p", main: true, ports: { api: 8301 } },
+  ]);
   assert.throws(() => parseWorkspaces({ version: 5, workspaces: {} }), /v5/);
   assert.throws(() => parseWorkspaces([]), /non pris en charge/);
 });
@@ -30,7 +32,8 @@ test("a dev-server counts when one of its processes is alive", () => {
 });
 
 test("git worktree list --porcelain", () => {
-  const output = "worktree /p\nHEAD abc\nbranch refs/heads/main\n\nworktree /p-53\nHEAD def\nbranch refs/heads/53/bar\n\nworktree /d\nHEAD 123\ndetached\n";
+  const output =
+    "worktree /p\nHEAD abc\nbranch refs/heads/main\n\nworktree /p-53\nHEAD def\nbranch refs/heads/53/bar\n\nworktree /d\nHEAD 123\ndetached\n";
   assert.deepEqual(parseWorktreeList(output), [
     { path: "/p", branch: "main" },
     { path: "/p-53", branch: "53/bar" },
@@ -40,9 +43,12 @@ test("git worktree list --porcelain", () => {
 
 test("lsof -F listening ports, IPv4 and IPv6", () => {
   const output = "p101\ncnode\nn127.0.0.1:8301\nn[::1]:8302\np202\nccom.docker.backend\nn*:8300\n";
-  assert.deepEqual([...parseLsof(output)], [
-    [8301, "node"],
-    [8302, "node"],
-    [8300, "com.docker.backend"],
-  ]);
+  assert.deepEqual(
+    [...parseLsof(output)],
+    [
+      [8301, "node"],
+      [8302, "node"],
+      [8300, "com.docker.backend"],
+    ],
+  );
 });
