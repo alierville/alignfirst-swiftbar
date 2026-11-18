@@ -191,6 +191,10 @@ async function main(args: string[]): Promise<void> {
       const at = rest.indexOf("--every");
       const interval = at >= 0 ? rest[at + 1] : DEFAULT_INTERVAL;
       if (at >= 0) rest.splice(at, 2);
+      // An option is never a folder: `install --help` must not install the plugin into "./--help".
+      const option = rest.find((arg) => arg.startsWith("-"));
+      if (option) fail(`unknown option: ${option} (usage: install [folder] [--every 5m])`);
+      if (rest.length > 1) fail("usage: install [folder] [--every 5m]");
       return install(rest[0], interval ?? "");
     }
     default:
