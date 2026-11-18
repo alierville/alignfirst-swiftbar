@@ -13,7 +13,7 @@ npm run test:e2e     # end-to-end test, test/e2e/*.e2e.ts
 
 CI (`.github/workflows/ci.yml`, Ubuntu) runs all of them plus `npx alignfirst docmap --check`.
 
-Run the CLI from the sources: `node src/cli.ts <command>` (`json` prints the full state without secrets, handy to check a change). `swiftbar` needs `WORKSPACE_BAR_PLUGIN` set to the plugin path. Set `WORKSPACE_BAR_HOME` to a temporary folder to avoid touching the real `~/.config/workspace-bar/`.
+Run the CLI from the sources: `node src/cli.ts <command>`, or the npm scripts (`npm run add`, `list`, `json`…) (`json` prints the full state without secrets, handy to check a change). `swiftbar` needs `WORKSPACE_BAR_PLUGIN` set to the plugin path. Set `WORKSPACE_BAR_HOME` to a temporary folder to avoid touching the real `~/.config/workspace-bar/`.
 
 ## Tests
 

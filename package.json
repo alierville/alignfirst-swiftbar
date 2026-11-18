@@ -7,6 +7,12 @@
     "node": ">=24"
   },
   "scripts": {
+    "add": "node --disable-warning=ExperimentalWarning src/cli.ts add",
+    "remove": "node --disable-warning=ExperimentalWarning src/cli.ts remove",
+    "list": "node --disable-warning=ExperimentalWarning src/cli.ts list",
+    "init": "node --disable-warning=ExperimentalWarning src/cli.ts init",
+    "json": "node --disable-warning=ExperimentalWarning src/cli.ts json",
+    "plugin:install": "node --disable-warning=ExperimentalWarning src/cli.ts install",
     "test": "node --test --disable-warning=ExperimentalWarning 'test/*.test.ts'",
     "typecheck": "tsc --noEmit",
     "lint": "biome check .",

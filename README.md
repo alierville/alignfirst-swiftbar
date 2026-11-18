@@ -26,14 +26,23 @@ Node 24+ (TypeScript runs directly), no runtime dependency.
 brew install --cask swiftbar
 mkdir -p ~/.config/swiftbar-plugins
 defaults write com.ameba.SwiftBar PluginDirectory ~/.config/swiftbar-plugins
-node src/cli.ts install               # launcher in ~/.config/workspace-bar, plugin in the SwiftBar folder
-node src/cli.ts add ~/code/project
-node src/cli.ts init ~/code/project   # creates .local/workspace-bar.json
+npm run plugin:install            # launcher in ~/.config/workspace-bar, plugin in the SwiftBar folder
+npm run add ~/code/project
+npm run init ~/code/project       # creates .local/workspace-bar.json
 ```
 
 The plugin folder must not be `~/Library/Application Support/SwiftBar/…`: SwiftBar stores each plugin's data there, in folders it would then try to load ("Show Error"). `install` refuses it.
 
-After `install`, the command is also available as `~/.config/workspace-bar/workspace-bar <command>`. Run `install` again after changing Node version or moving the repository.
+Run these from the repository folder; give other folders as absolute or `~` paths (npm runs scripts from the repository root, so a relative path is read from there). After `install`, the command is also available anywhere as `~/.config/workspace-bar/workspace-bar <command>`. Run `npm run plugin:install` again after changing Node version or moving the repository.
+
+| npm script | Command |
+| --- | --- |
+| `npm run add <folder>` | `add` |
+| `npm run remove <key\|folder>` | `remove` |
+| `npm run list` | `list` |
+| `npm run init <folder>` | `init` |
+| `npm run json` | `json` |
+| `npm run plugin:install [-- --every 30s]` | `install` (not `npm run install`, which npm runs on every `npm install`) |
 
 | Command | Effect |
 | --- | --- |
@@ -47,7 +56,7 @@ After `install`, the command is also available as `~/.config/workspace-bar/works
 
 ## What is read
 
-On every refresh (every 10 seconds by default, `install --every 30s` to change it; "Refresh" in the menu at any time):
+On every refresh (every 10 seconds by default, `npm run plugin:install -- --every 30s` to change it; "Refresh" in the menu at any time):
 
 - the repository's AlignFirst registry, `.local-wt/workspace-registry/`: worktrees, ports, live dev servers (`· dev`);
 - `git worktree list`: branches, and worktrees without AlignFirst ports ("no ports yet");
