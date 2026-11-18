@@ -55,8 +55,6 @@ test("menu: count, project, worktree dot, endpoint dots, clicks by id", () => {
       "----🔴 Console   localhost:8302 | bash=/plugins/workspace-bar.1m.sh param1=open param2=project param3=project param4=console terminal=false refresh=false",
       "-------",
       "----Admin 🔑 | bash=/plugins/workspace-bar.1m.sh param1=open param2=project param3=project param4=admin terminal=false refresh=false",
-      "---",
-      "Refresh | refresh=true",
       "",
     ].join("\n"),
   );

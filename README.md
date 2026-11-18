@@ -56,7 +56,7 @@ Run these from the repository folder; give other folders as absolute or `~` path
 
 ## What is read
 
-On every refresh (every 10 seconds by default, `npm run plugin:install -- --every 30s` to change it; "Refresh" in the menu at any time):
+On every refresh (every 10 seconds by default, `npm run plugin:install -- --every 30s` to change it; SwiftBar's own "Refresh" item at any time):
 
 - the repository's AlignFirst registry, `.local-wt/workspace-registry/`: worktrees, ports, live dev servers (`· dev`);
 - `git worktree list`: branches, and worktrees without AlignFirst ports ("no ports yet");

@@ -80,6 +80,5 @@ export function renderSwiftBar(projects: PublicProject[], plugin: string): strin
     for (const worktree of project.worktrees)
       lines.push(...worktreeLines(plugin, project, worktree));
   }
-  lines.push("---", "Refresh | refresh=true");
   return `${lines.join("\n")}\n`;
 }
