@@ -12,7 +12,7 @@ export class ProjectFileError extends Error {}
 export class MissingPortError extends ProjectFileError {}
 
 /** Shown on an entry while its worktree has no AlignFirst ports yet. */
-export const PORT_NOT_ALLOCATED = "port non attribué";
+export const PORT_NOT_ALLOCATED = "port not allocated";
 
 /** What a worktree offers to templates. */
 export interface TemplateContext {
@@ -28,15 +28,15 @@ export interface TemplateContext {
  */
 export function assertSafeFile(path: string, uid: number | undefined = process.getuid?.()): void {
   for (const [target, label] of [
-    [join(path, ".."), "dossier .local"],
-    [path, "fichier"],
+    [join(path, ".."), ".local folder"],
+    [path, "file"],
   ] as const) {
     const stat = lstatSync(target);
-    if (stat.isSymbolicLink()) throw new ProjectFileError(`${label} refusé : lien symbolique`);
+    if (stat.isSymbolicLink()) throw new ProjectFileError(`${label} refused: symlink`);
     if (uid !== undefined && stat.uid !== uid)
-      throw new ProjectFileError(`${label} refusé : n'appartient pas à l'utilisateur`);
+      throw new ProjectFileError(`${label} refused: not owned by the user`);
     if ((stat.mode & 0o022) !== 0)
-      throw new ProjectFileError(`${label} refusé : modifiable par d'autres (chmod go-w)`);
+      throw new ProjectFileError(`${label} refused: writable by others (chmod go-w)`);
   }
 }
 
@@ -49,48 +49,47 @@ const ENTRY_KEYS = new Set<string>(["id", "label", "port", "secret", "app", ...A
 
 function checkEntry(value: unknown, index: number): EntryDeclaration {
   const where = `endpoints[${index}]`;
-  if (!isRecord(value)) throw new ProjectFileError(`${where} : objet attendu`);
+  if (!isRecord(value)) throw new ProjectFileError(`${where}: object expected`);
   const unknown = Object.keys(value).filter((key) => !ENTRY_KEYS.has(key));
-  if (unknown.length > 0)
-    throw new ProjectFileError(`${where} : clé inconnue ${unknown.join(", ")}`);
+  if (unknown.length > 0) throw new ProjectFileError(`${where}: unknown key ${unknown.join(", ")}`);
   if (typeof value.label !== "string" || value.label.trim() === "")
-    throw new ProjectFileError(`${where} : label manquant`);
-  const label = `« ${value.label} »`;
+    throw new ProjectFileError(`${where}: missing label`);
+  const label = `"${value.label}"`;
   for (const key of ["id", "open", "app", "copy"] as const) {
     if (value[key] !== undefined && typeof value[key] !== "string")
-      throw new ProjectFileError(`${label} : ${key} doit être une chaîne`);
+      throw new ProjectFileError(`${label}: ${key} must be a string`);
   }
   for (const key of ["secret", "terminal", "claude", "finder"] as const) {
     if (value[key] !== undefined && typeof value[key] !== "boolean")
-      throw new ProjectFileError(`${label} : ${key} doit être un booléen`);
+      throw new ProjectFileError(`${label}: ${key} must be a boolean`);
   }
   if (value.port !== undefined && typeof value.port !== "string" && !Number.isInteger(value.port)) {
-    throw new ProjectFileError(`${label} : port doit être un nom de port ou un nombre`);
+    throw new ProjectFileError(`${label}: port must be a port name or a number`);
   }
   if (value.run !== undefined) {
     const run = value.run;
     if (!Array.isArray(run) || run.length === 0 || !run.every((arg) => typeof arg === "string")) {
-      throw new ProjectFileError(`${label} : run doit être une liste de chaînes`);
+      throw new ProjectFileError(`${label}: run must be a list of strings`);
     }
     if (!run[0].startsWith("/"))
-      throw new ProjectFileError(`${label} : run[0] doit être un chemin absolu`);
+      throw new ProjectFileError(`${label}: run[0] must be an absolute path`);
   }
   const actions = ACTION_KEYS.filter((key) => value[key] !== undefined && value[key] !== false);
   if (actions.length !== 1)
-    throw new ProjectFileError(`${label} : une seule action parmi ${ACTION_KEYS.join(", ")}`);
+    throw new ProjectFileError(`${label}: exactly one action among ${ACTION_KEYS.join(", ")}`);
   if (value.app !== undefined && actions[0] !== "open")
-    throw new ProjectFileError(`${label} : app ne va qu'avec open`);
+    throw new ProjectFileError(`${label}: app only goes with open`);
   return value as unknown as EntryDeclaration;
 }
 
 /** Checks the shape of a parsed project file. */
 export function checkConfig(data: unknown): ProjectConfig {
-  if (!isRecord(data)) throw new ProjectFileError("objet JSON attendu");
+  if (!isRecord(data)) throw new ProjectFileError("JSON object expected");
   const unknown = Object.keys(data).filter((key) => key !== "name" && key !== "endpoints");
-  if (unknown.length > 0) throw new ProjectFileError(`clé inconnue ${unknown.join(", ")}`);
+  if (unknown.length > 0) throw new ProjectFileError(`unknown key ${unknown.join(", ")}`);
   if (data.name !== undefined && typeof data.name !== "string")
-    throw new ProjectFileError("name doit être une chaîne");
-  if (!Array.isArray(data.endpoints)) throw new ProjectFileError("endpoints doit être une liste");
+    throw new ProjectFileError("name must be a string");
+  if (!Array.isArray(data.endpoints)) throw new ProjectFileError("endpoints must be a list");
   return { name: data.name, endpoints: data.endpoints.map(checkEntry) };
 }
 
@@ -104,12 +103,12 @@ export function loadProjectFile(mainWorktree: string): ProjectConfig | null {
   }
   assertSafeFile(path);
   if (!isIgnoredByGit(mainWorktree, PROJECT_FILE))
-    throw new ProjectFileError("refusé : le fichier doit être ignoré par git et non suivi");
+    throw new ProjectFileError("refused: the file must be ignored and untracked by git");
   let data: unknown;
   try {
     data = JSON.parse(readFileSync(path, "utf8"));
   } catch {
-    throw new ProjectFileError("JSON invalide");
+    throw new ProjectFileError("invalid JSON");
   }
   return checkConfig(data);
 }
@@ -120,16 +119,17 @@ export function renderTemplate(text: string, context: TemplateContext): string {
     const key = name.trim();
     if (key === "worktree") return context.worktree;
     if (key === "branch") {
-      if (context.branch === null) throw new ProjectFileError("${branch} : worktree sans branche");
+      if (context.branch === null)
+        throw new ProjectFileError("${branch}: worktree without a branch");
       return context.branch;
     }
     if (key.startsWith("ports.")) {
       const port = context.ports[key.slice("ports.".length)];
       if (port === undefined)
-        throw new MissingPortError(`\${${key}} : port inconnu de ce worktree`);
+        throw new MissingPortError(`\${${key}}: unknown port for this worktree`);
       return String(port);
     }
-    throw new ProjectFileError(`\${${key}} : variable inconnue (ports.<nom>, worktree, branch)`);
+    throw new ProjectFileError(`\${${key}}: unknown variable (ports.<name>, worktree, branch)`);
   });
 }
 
@@ -206,7 +206,7 @@ function resolveEntry(entry: EntryDeclaration, id: string, context: TemplateCont
   else if (typeof entry.port === "string") {
     const port = context.ports[entry.port];
     if (port === undefined)
-      throw new MissingPortError(`« ${entry.label} » : port ${entry.port} inconnu de ce worktree`);
+      throw new MissingPortError(`"${entry.label}": unknown port ${entry.port} for this worktree`);
     endpoint.port = port;
   }
   if (action.type === "copy") endpoint.secret = entry.secret ?? true;

@@ -137,8 +137,8 @@ test("worktrees, dev server and status dots come from the real AlignFirst setup"
     bareTree.endpoints.map((endpoint) => [endpoint.id, endpoint.unavailable]),
   );
   assert.deepEqual(unavailable, {
-    web: "port non attribué",
-    db: "port non attribué",
+    web: "port not allocated",
+    db: "port not allocated",
     secret: undefined,
     marker: undefined,
   });
@@ -147,9 +147,9 @@ test("worktrees, dev server and status dots come from the real AlignFirst setup"
 test("the SwiftBar menu shows the dev server and the unprepared worktree", () => {
   const menu = workspaceBar("swiftbar");
   assert.match(menu, /🟠 feature {2}· dev/);
-  assert.match(menu, /non provisionné/);
-  assert.match(menu, /Web {3}port non attribué \| disabled=true/);
-  assert.doesNotMatch(menu, /port inconnu/);
+  assert.match(menu, /no ports yet/);
+  assert.match(menu, /Web {3}port not allocated \| disabled=true/);
+  assert.doesNotMatch(menu, /unknown port/);
 });
 
 test("no secret reaches the JSON or the menu", () => {
@@ -175,7 +175,7 @@ test("a project file in a folder writable by others is refused", () => {
   const local = join(main, ".local");
   chmodSync(local, 0o770);
   try {
-    assert.match(workspaceBar("swiftbar"), /modifiable par d'autres/);
+    assert.match(workspaceBar("swiftbar"), /writable by others/);
   } finally {
     chmodSync(local, 0o700);
   }

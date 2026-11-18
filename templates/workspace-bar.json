@@ -1,15 +1,15 @@
 {
-  "name": "Mon projet",
+  "name": "My project",
   "endpoints": [
     { "label": "App", "open": "http://localhost:${ports.web}", "port": "web" },
     {
-      "label": "Base de données",
+      "label": "Database",
       "open": "postgres://user:password@localhost:${ports.postgres}/db",
       "port": "postgres"
     },
-    { "label": "Compte de test", "copy": "user@example.local password" },
-    { "label": "Terminal ici", "terminal": true },
-    { "label": "Claude Code ici", "claude": true },
+    { "label": "Test account", "copy": "user@example.local password" },
+    { "label": "Terminal here", "terminal": true },
+    { "label": "Claude Code here", "claude": true },
     { "label": "Finder", "finder": true }
   ]
 }

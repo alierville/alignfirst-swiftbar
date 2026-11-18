@@ -73,7 +73,7 @@ function buildEndpoints(
   } catch (error) {
     return {
       endpoints: portEndpoints(worktree.ports),
-      error: `${PROJECT_FILE} : ${message(error)}`,
+      error: `${PROJECT_FILE}: ${message(error)}`,
     };
   }
 }
@@ -91,7 +91,7 @@ export function collectProject(entry: ProjectEntry): Project {
     config = loadProjectFile(entry.path);
     if (config?.name) project.name = config.name;
   } catch (error) {
-    project.error = `${PROJECT_FILE} ignoré : ${message(error)}`;
+    project.error = `${PROJECT_FILE} ignored: ${message(error)}`;
   }
   try {
     const registry = readRegistry(entry.path);
@@ -115,7 +115,7 @@ export function collectProject(entry: ProjectEntry): Project {
         project.worktrees.push({
           ...base,
           endpoints: [],
-          error: "dossier absent (workspace orphelin)",
+          error: "folder missing (orphan workspace)",
         });
         continue;
       }

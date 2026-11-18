@@ -17,4 +17,4 @@ read_when:
 7. **Never read a project's `.env`,** never run project code, `npx`, network or a listening port.
 8. **Private storage.** `~/.config/workspace-bar/` is `0700`, `projects.json` `0600`, the project file `0600`.
 
-A change that relaxes one of these needs an explicit decision and an update of the README's "Sécurité" section.
+A change that relaxes one of these needs an explicit decision and an update of the README's "Security" section.

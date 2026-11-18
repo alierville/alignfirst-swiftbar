@@ -2,7 +2,7 @@
   "name": "workspace-bar",
   "private": true,
   "type": "module",
-  "description": "Endpoints des workspaces AlignFirst dans la barre des menus macOS (SwiftBar)",
+  "description": "AlignFirst workspace endpoints in the macOS menu bar (SwiftBar)",
   "engines": {
     "node": ">=24"
   },

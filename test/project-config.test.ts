@@ -26,9 +26,12 @@ test("templates know ports, worktree and branch, nothing else", () => {
     "http://localhost:8301/x",
   );
   assert.equal(renderTemplate("${worktree} ${ branch }", context), "/work/tree 53/bar");
-  assert.throws(() => renderTemplate("${ports.nope}", context), /port inconnu/);
-  assert.throws(() => renderTemplate("${env.OPENAI_API_KEY}", context), /variable inconnue/);
-  assert.throws(() => renderTemplate("${branch}", { ...context, branch: null }), /sans branche/);
+  assert.throws(() => renderTemplate("${ports.nope}", context), /unknown port/);
+  assert.throws(() => renderTemplate("${env.OPENAI_API_KEY}", context), /unknown variable/);
+  assert.throws(
+    () => renderTemplate("${branch}", { ...context, branch: null }),
+    /without a branch/,
+  );
 });
 
 test("displays never carry credentials, queries or fragments", () => {
@@ -99,8 +102,8 @@ test("before AlignFirst allocates ports, entries that need one are unavailable",
   assert.deepEqual(
     endpoints.map((endpoint) => [endpoint.id, endpoint.action?.type ?? null, endpoint.unavailable]),
     [
-      ["console", null, "port non attribué"],
-      ["remote", null, "port non attribué"],
+      ["console", null, "port not allocated"],
+      ["remote", null, "port not allocated"],
       ["terminal", "terminal", undefined],
     ],
   );
@@ -111,31 +114,31 @@ test("before AlignFirst allocates ports, entries that need one are unavailable",
         checkConfig({ endpoints: [{ label: "X", open: "${ports.nope}" }] }),
         context,
       ),
-    /port inconnu/,
+    /unknown port/,
   );
 });
 
 test("the file shape is checked strictly", () => {
-  assert.throws(() => checkConfig([]), /objet JSON/);
-  assert.throws(() => checkConfig({ endpoints: {} }), /liste/);
-  assert.throws(() => checkConfig({ endpoints: [], extra: 1 }), /clé inconnue extra/);
-  assert.throws(() => checkConfig({ endpoints: [{ label: "x" }] }), /une seule action/);
+  assert.throws(() => checkConfig([]), /JSON object expected/);
+  assert.throws(() => checkConfig({ endpoints: {} }), /must be a list/);
+  assert.throws(() => checkConfig({ endpoints: [], extra: 1 }), /unknown key extra/);
+  assert.throws(() => checkConfig({ endpoints: [{ label: "x" }] }), /exactly one action/);
   assert.throws(
     () => checkConfig({ endpoints: [{ label: "x", copy: "a", open: "b" }] }),
-    /une seule action/,
+    /exactly one action/,
   );
   assert.throws(
     () => checkConfig({ endpoints: [{ label: "x", copy: "a", app: "B" }] }),
-    /app ne va qu'avec open/,
+    /app only goes with open/,
   );
   assert.throws(
     () => checkConfig({ endpoints: [{ label: "x", run: ["code", "."] }] }),
-    /chemin absolu/,
+    /absolute path/,
   );
-  assert.throws(() => checkConfig({ endpoints: [{ label: "x", terminal: "yes" }] }), /booléen/);
+  assert.throws(() => checkConfig({ endpoints: [{ label: "x", terminal: "yes" }] }), /boolean/);
   assert.throws(
     () => checkConfig({ endpoints: [{ label: "x", copy: "a", shell: "rm" }] }),
-    /clé inconnue shell/,
+    /unknown key shell/,
   );
   assert.throws(
     () =>
@@ -198,13 +201,13 @@ test("the project file is refused when others can write it or it is a symlink", 
   writeFileSync(file, "{}", { mode: 0o600 });
   assert.doesNotThrow(() => assertSafeFile(file));
   chmodSync(file, 0o620);
-  assert.throws(() => assertSafeFile(file), /modifiable par d'autres/);
+  assert.throws(() => assertSafeFile(file), /writable by others/);
   chmodSync(file, 0o600);
   chmodSync(local, 0o777);
-  assert.throws(() => assertSafeFile(file), /dossier \.local refusé/);
+  assert.throws(() => assertSafeFile(file), /\.local folder refused/);
   chmodSync(local, 0o755);
-  assert.throws(() => assertSafeFile(file, 12345), /n'appartient pas/);
+  assert.throws(() => assertSafeFile(file, 12345), /not owned/);
   const linked = join(local, "linked.json");
   symlinkSync(file, linked);
-  assert.throws(() => assertSafeFile(linked), /lien symbolique/);
+  assert.throws(() => assertSafeFile(linked), /symlink/);
 });

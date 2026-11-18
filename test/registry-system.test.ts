@@ -15,7 +15,7 @@ test("workspaces v4 are read, other versions fail closed", () => {
     { name: "project", worktree: "/p", main: true, ports: { api: 8301 } },
   ]);
   assert.throws(() => parseWorkspaces({ version: 5, workspaces: {} }), /v5/);
-  assert.throws(() => parseWorkspaces([]), /non pris en charge/);
+  assert.throws(() => parseWorkspaces([]), /unsupported registry format/);
 });
 
 test("a dev-server counts when one of its processes is alive", () => {

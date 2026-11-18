@@ -32,7 +32,7 @@ function readJson(path: string): unknown {
     return JSON.parse(readFileSync(path, "utf8"));
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code === "ENOENT") return undefined;
-    throw new RegistryError(`registre illisible : ${path}`);
+    throw new RegistryError(`unreadable registry: ${path}`);
   }
 }
 
@@ -57,7 +57,7 @@ export function parseWorkspaces(data: unknown): RegisteredWorkspace[] {
     !isRecord(data.workspaces)
   ) {
     const version = isRecord(data) ? String(data.version) : "?";
-    throw new RegistryError(`format de registre non pris en charge (workspaces v${version})`);
+    throw new RegistryError(`unsupported registry format (workspaces v${version})`);
   }
   const workspaces: RegisteredWorkspace[] = [];
   for (const [name, entry] of Object.entries(data.workspaces)) {
@@ -92,7 +92,7 @@ export function parseDevServers(
     data.version !== SUPPORTED_DEV_SERVERS_VERSION ||
     !Array.isArray(data.servers)
   ) {
-    throw new RegistryError("format de registre non pris en charge (dev-servers)");
+    throw new RegistryError("unsupported registry format (dev-servers)");
   }
   for (const server of data.servers) {
     if (!isRecord(server) || typeof server.worktree !== "string" || !isRecord(server.pids))
@@ -107,7 +107,7 @@ export function readRegistry(mainWorktree: string): Registry {
   const dir = registryDir(mainWorktree);
   const workspaces = readJson(join(dir, "workspaces.json"));
   if (workspaces === undefined)
-    throw new RegistryError("aucun registre AlignFirst (workspace setup jamais lancé ?)");
+    throw new RegistryError("no AlignFirst registry (workspace setup never run?)");
   return {
     workspaces: parseWorkspaces(workspaces),
     liveDevServers: parseDevServers(readJson(join(dir, "dev-servers.json"))),

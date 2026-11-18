@@ -56,7 +56,7 @@ test("menu: count, project, worktree dot, endpoint dots, clicks by id", () => {
       "-------",
       "----Admin 🔑 | bash=/plugins/workspace-bar.1m.sh param1=open param2=project param3=project param4=admin terminal=false refresh=false",
       "---",
-      "Rafraîchir | refresh=true",
+      "Refresh | refresh=true",
       "",
     ].join("\n"),
   );
@@ -65,11 +65,11 @@ test("menu: count, project, worktree dot, endpoint dots, clicks by id", () => {
 test("an unavailable endpoint is greyed out, without a click", () => {
   const pending = structuredClone(project);
   pending.worktrees[0].endpoints = [
-    { id: "console", label: "Console", kind: "action", unavailable: "port non attribué" },
+    { id: "console", label: "Console", kind: "action", unavailable: "port not allocated" },
   ];
   assert.match(
     renderSwiftBar([pending], "/plugin"),
-    /\n----Console {3}port non attribué \| disabled=true\n/,
+    /\n----Console {3}port not allocated \| disabled=true\n/,
   );
 });
 
@@ -80,6 +80,6 @@ test("labels cannot inject SwiftBar parameters or lines", () => {
 test("unsafe ids are refused rather than passed to SwiftBar", () => {
   const unsafe = structuredClone(project);
   unsafe.worktrees[0].endpoints[0].id = "a b";
-  assert.throws(() => renderSwiftBar([unsafe], "/plugin"), /non sûr/);
+  assert.throws(() => renderSwiftBar([unsafe], "/plugin"), /unsafe identifier/);
   assert.match(renderSwiftBar([project], "/my plugins/x.sh"), /bash="\/my plugins\/x.sh"/);
 });

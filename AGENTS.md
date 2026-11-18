@@ -11,7 +11,7 @@ Run `npx -y alignfirst context` from the repository root once, as your first com
 
 ## Language
 
-CLI messages and menu labels are in French. The README, code, comments and `docs/` are in English. The README quotes French menu strings verbatim.
+Everything is in English: CLI messages, menu labels, README, code, comments and `docs/`.
 
 This repository is public: examples, fixtures and tests use neutral names (`project`, `example.local`) and fake credentials, never real projects.
 

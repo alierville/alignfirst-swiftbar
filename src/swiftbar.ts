@@ -17,15 +17,14 @@ export function menuText(text: string): string {
 
 function quote(value: string): string {
   if (!/^[^\s"]+$/.test(value)) {
-    if (value.includes('"')) throw new Error(`chemin de plugin non pris en charge : ${value}`);
+    if (value.includes('"')) throw new Error(`unsupported plugin path: ${value}`);
     return `"${value}"`;
   }
   return value;
 }
 
 function clickParams(plugin: string, args: string[]): string {
-  for (const arg of args)
-    if (!SAFE_PARAM.test(arg)) throw new Error(`identifiant non sûr : ${arg}`);
+  for (const arg of args) if (!SAFE_PARAM.test(arg)) throw new Error(`unsafe identifier: ${arg}`);
   const params = args.map((arg, index) => `param${index + 1}=${arg}`).join(" ");
   return `bash=${quote(plugin)} ${params} terminal=false refresh=false`;
 }
@@ -56,7 +55,7 @@ function worktreeLines(plugin: string, project: PublicProject, worktree: PublicW
   const lines = [`--${dot} ${name}${worktree.devServer ? "  · dev" : ""}`];
   lines.push(`----${menuText(worktree.path)} | disabled=true size=11`);
   if (!worktree.prepared)
-    lines.push("----non provisionné (alignfirst dev setup) | disabled=true size=11");
+    lines.push("----no ports yet (npx alignfirst dev setup) | disabled=true size=11");
   if (worktree.error) lines.push(`----⚠ ${menuText(worktree.error)} | disabled=true color=red`);
   // Endpoints with a port, then the other actions, each group after a separator.
   let previous: boolean | undefined;
@@ -74,14 +73,13 @@ export function renderSwiftBar(projects: PublicProject[], plugin: string): strin
     .flatMap((project) => project.worktrees)
     .filter((tree) => tree.status === "up" || tree.status === "partial");
   const lines = [active.length > 0 ? `AlignFirst · ${active.length}` : "AlignFirst", "---"];
-  if (projects.length === 0)
-    lines.push("Aucun projet : workspace-bar add <dossier> | disabled=true");
+  if (projects.length === 0) lines.push("No project: workspace-bar add <folder> | disabled=true");
   for (const project of projects) {
     lines.push(menuText(project.name));
     if (project.error) lines.push(`--⚠ ${menuText(project.error)} | color=red`);
     for (const worktree of project.worktrees)
       lines.push(...worktreeLines(plugin, project, worktree));
   }
-  lines.push("---", "Rafraîchir | refresh=true");
+  lines.push("---", "Refresh | refresh=true");
   return `${lines.join("\n")}\n`;
 }
