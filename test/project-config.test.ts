@@ -1,14 +1,24 @@
 import assert from "node:assert/strict";
-import { chmodSync, mkdirSync, mkdtempSync, symlinkSync, writeFileSync } from "node:fs";
+import {
+  chmodSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  symlinkSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
 import { toPublic } from "../src/collect.ts";
 import {
+  ACTION_KEYS,
   assertSafeFile,
   checkConfig,
   describeUrl,
+  ENTRY_KEYS,
   portEndpoints,
+  ROOT_KEYS,
   renderTemplate,
   resolveEndpoints,
 } from "../src/project-config.ts";
@@ -135,7 +145,15 @@ test("the file shape is checked strictly", () => {
     () => checkConfig({ endpoints: [{ label: "x", run: ["code", "."] }] }),
     /absolute path/,
   );
-  assert.throws(() => checkConfig({ endpoints: [{ label: "x", terminal: "yes" }] }), /boolean/);
+  assert.throws(
+    () => checkConfig({ endpoints: [{ label: "x", terminal: "yes" }] }),
+    /must be true/,
+  );
+  assert.throws(
+    () => checkConfig({ endpoints: [{ label: "x", open: "b", terminal: false }] }),
+    /must be true/,
+  );
+  assert.doesNotThrow(() => checkConfig({ $schema: "./x.json", endpoints: [] }));
   assert.throws(
     () => checkConfig({ endpoints: [{ label: "x", copy: "a", shell: "rm" }] }),
     /unknown key shell/,
@@ -210,4 +228,16 @@ test("the project file is refused when others can write it or it is a symlink", 
   const linked = join(local, "linked.json");
   symlinkSync(file, linked);
   assert.throws(() => assertSafeFile(linked), /symlink/);
+});
+
+test("the JSON schema declares exactly the keys the loader accepts", () => {
+  const path = new URL("../schemas/workspace-bar.schema.json", import.meta.url);
+  const schema = JSON.parse(readFileSync(path, "utf8"));
+  assert.deepEqual(Object.keys(schema.properties).sort(), [...ROOT_KEYS].sort());
+  const entry = schema.definitions.entry;
+  assert.deepEqual(Object.keys(entry.properties).sort(), [...ENTRY_KEYS].sort());
+  assert.deepEqual(
+    entry.oneOf.map((option: { required: string[] }) => option.required[0]),
+    [...ACTION_KEYS],
+  );
 });

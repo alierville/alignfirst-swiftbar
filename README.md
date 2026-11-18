@@ -28,7 +28,8 @@ mkdir -p ~/.config/swiftbar-plugins
 defaults write com.ameba.SwiftBar PluginDirectory ~/.config/swiftbar-plugins
 npm run plugin:install            # launcher in ~/.config/workspace-bar, plugin in the SwiftBar folder
 npm run add ~/code/project
-npm run init ~/code/project       # creates .local/workspace-bar.json
+npm run init ~/code/project       # creates .local/workspace-bar.json from the project's AlignFirst ports
+npm run check ~/code/project      # shows the menu each worktree gets, and any error
 ```
 
 The plugin folder must not be `~/Library/Application Support/SwiftBar/…`: SwiftBar stores each plugin's data there, in folders it would then try to load ("Show Error"). `install` refuses it.
@@ -41,6 +42,7 @@ Run these from the repository folder; give other folders as absolute or `~` path
 | `npm run remove <key\|folder>` | `remove` |
 | `npm run list` | `list` |
 | `npm run init <folder>` | `init` |
+| `npm run check <folder>` | `check` |
 | `npm run json` | `json` |
 | `npm run plugin:install [-- --every 30s]` | `install` (not `npm run install`, which npm runs on every `npm install`) |
 
@@ -49,7 +51,8 @@ Run these from the repository folder; give other folders as absolute or `~` path
 | `add <folder>` | follows the repository containing this folder (its main worktree) |
 | `remove <key\|folder>` | stops following it |
 | `list` | followed repositories |
-| `init <folder>` | creates `.local/workspace-bar.json` from the template |
+| `init <folder>` | creates `.local/workspace-bar.json` with one entry per AlignFirst port, plus Terminal, Claude Code and Finder |
+| `check <folder>` | prints the menu each worktree gets and the project-file errors; exits 1 on an error. Works on any repository, followed or not |
 | `json` | full state as JSON, without any secret |
 | `swiftbar` | menu in SwiftBar format |
 | `open <project> <worktree> <id>` | a click's action |
@@ -67,7 +70,30 @@ Without a project file, the menu lists the worktree's AlignFirst ports (a click 
 
 ## Project file
 
-`<main worktree>/.local/workspace-bar.json`, written once and shared by AlignFirst with every worktree. It is plain JSON, never executed. Every string may use `${ports.<name>}` (the worktree's AlignFirst ports), `${worktree}` (its path) and `${branch}`; any other variable is an error. See `templates/workspace-bar.json`.
+`<main worktree>/.local/workspace-bar.json`, written once and shared by AlignFirst with every worktree. It is plain JSON, never executed. Every string may use `${ports.<name>}` (the worktree's AlignFirst ports), `${worktree}` (its path) and `${branch}`; any other variable is an error.
+
+`init` pre-fills it from the AlignFirst registry: an `open` entry on `http://localhost:${ports.<name>}` per port, or a `copy` of `localhost:${ports.<name>}` for ports whose name looks like a database or another non-HTTP service (`postgres`, `db`, `redis`…). Edit it from there, then run `check`.
+
+### Editor support
+
+`schemas/workspace-bar.schema.json` describes the file: editors that read JSON schemas (VS Code and others) then complete keys, show their documentation and flag mistakes. They find it through the file's `$schema` key, which `init` writes:
+
+```json
+"$schema": "https://raw.githubusercontent.com/alierville/alignfirst-swiftbar/main/schemas/workspace-bar.schema.json"
+```
+
+For files without it, add that line, or map every project file once in VS Code's settings:
+
+```json
+"json.schemas": [
+  {
+    "fileMatch": ["**/.local/workspace-bar.json"],
+    "url": "https://raw.githubusercontent.com/alierville/alignfirst-swiftbar/main/schemas/workspace-bar.schema.json"
+  }
+]
+```
+
+The editor downloads the schema; workspace-bar itself never does, it only accepts the key.
 
 ```json
 {

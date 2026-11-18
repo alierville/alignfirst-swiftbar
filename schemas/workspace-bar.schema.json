@@ -1,0 +1,67 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://raw.githubusercontent.com/alierville/alignfirst-swiftbar/main/schemas/workspace-bar.schema.json",
+  "title": "workspace-bar project file",
+  "description": "<main worktree>/.local/workspace-bar.json: the endpoints shown in the menu for each worktree. Strings may use ${ports.<name>}, ${worktree} and ${branch}.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["endpoints"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "name": {
+      "type": "string",
+      "description": "Project name shown in the menu. Defaults to the main worktree's folder name."
+    },
+    "endpoints": { "type": "array", "items": { "$ref": "#/definitions/entry" } }
+  },
+  "definitions": {
+    "entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["label"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Stable id used by clicks. Defaults to a slug of the label."
+        },
+        "label": { "type": "string", "minLength": 1, "pattern": "\\S" },
+        "port": {
+          "description": "Port watched for the status dot: an AlignFirst port name, or a number. Deduced from a local URL otherwise.",
+          "oneOf": [{ "type": "string" }, { "type": "integer" }]
+        },
+        "secret": {
+          "type": "boolean",
+          "description": "Marks a copy value as a secret (default true for copy)."
+        },
+        "open": {
+          "type": "string",
+          "description": "URL opened by macOS (browser, TablePlus for postgres://, …), or by `app`."
+        },
+        "app": { "type": "string", "description": "Application that opens the `open` URL." },
+        "copy": { "type": "string", "description": "Value copied to the clipboard." },
+        "terminal": { "const": true, "description": "Opens Terminal on the worktree." },
+        "claude": {
+          "const": true,
+          "description": "Starts Claude Code in Terminal on the worktree."
+        },
+        "finder": { "const": true, "description": "Opens the worktree in Finder." },
+        "run": {
+          "type": "array",
+          "description": "Absolute executable path then its arguments, run in the worktree without a shell.",
+          "minItems": 1,
+          "items": [{ "type": "string", "pattern": "^/" }],
+          "additionalItems": { "type": "string" }
+        }
+      },
+      "dependencies": { "app": ["open"] },
+      "oneOf": [
+        { "required": ["open"] },
+        { "required": ["copy"] },
+        { "required": ["terminal"] },
+        { "required": ["claude"] },
+        { "required": ["finder"] },
+        { "required": ["run"] }
+      ]
+    }
+  }
+}

@@ -9,8 +9,11 @@ import {
   existsSync,
   mkdirSync,
   mkdtempSync,
+  readFileSync,
   realpathSync,
+  renameSync,
   rmSync,
+  statSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
@@ -152,8 +155,16 @@ test("the SwiftBar menu shows the dev server and the unprepared worktree", () =>
   assert.doesNotMatch(menu, /unknown port/);
 });
 
-test("no secret reaches the JSON or the menu", () => {
-  const outputs = [workspaceBar("json"), workspaceBar("swiftbar")];
+test("check prints the menu of every worktree", () => {
+  const report = workspaceBar("check", main);
+  assert.match(report, /^E2E {2}/);
+  assert.match(report, /feature {2}\S+proj-feature {2}\(dev\)/);
+  assert.match(report, /Web +localhost:\d+ · port \d+ listening/);
+  assert.match(report, /Web +port not allocated/);
+});
+
+test("no secret reaches the JSON, the menu or the check report", () => {
+  const outputs = [workspaceBar("json"), workspaceBar("swiftbar"), workspaceBar("check", main)];
   for (const output of outputs) {
     for (const secret of SECRETS) assert.ok(!output.includes(secret), `${secret} leaked`);
   }
@@ -178,5 +189,24 @@ test("a project file in a folder writable by others is refused", () => {
     assert.match(workspaceBar("swiftbar"), /writable by others/);
   } finally {
     chmodSync(local, 0o700);
+  }
+});
+
+test("init writes a project file from the registry's ports", () => {
+  const file = join(main, ".local", "workspace-bar.json");
+  const kept = `${file}.kept`;
+  renameSync(file, kept);
+  try {
+    workspaceBar("init", main);
+    const written = JSON.parse(readFileSync(file, "utf8"));
+    assert.deepEqual(written.endpoints.slice(0, 2), [
+      { label: "web", open: "http://localhost:${ports.web}", port: "web" },
+      { label: "db", copy: "localhost:${ports.db}", secret: false, port: "db" },
+    ]);
+    assert.equal(statSync(file).mode & 0o777, 0o600);
+    assert.doesNotThrow(() => workspaceBar("check", main));
+  } finally {
+    rmSync(file, { force: true });
+    renameSync(kept, file);
   }
 });

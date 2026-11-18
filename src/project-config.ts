@@ -44,8 +44,9 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-const ACTION_KEYS = ["open", "copy", "terminal", "claude", "finder", "run"] as const;
-const ENTRY_KEYS = new Set<string>(["id", "label", "port", "secret", "app", ...ACTION_KEYS]);
+// Keep in sync with schemas/workspace-bar.schema.json (a test checks it).
+export const ACTION_KEYS = ["open", "copy", "terminal", "claude", "finder", "run"] as const;
+export const ENTRY_KEYS = new Set<string>(["id", "label", "port", "secret", "app", ...ACTION_KEYS]);
 
 function checkEntry(value: unknown, index: number): EntryDeclaration {
   const where = `endpoints[${index}]`;
@@ -59,9 +60,11 @@ function checkEntry(value: unknown, index: number): EntryDeclaration {
     if (value[key] !== undefined && typeof value[key] !== "string")
       throw new ProjectFileError(`${label}: ${key} must be a string`);
   }
-  for (const key of ["secret", "terminal", "claude", "finder"] as const) {
-    if (value[key] !== undefined && typeof value[key] !== "boolean")
-      throw new ProjectFileError(`${label}: ${key} must be a boolean`);
+  if (value.secret !== undefined && typeof value.secret !== "boolean")
+    throw new ProjectFileError(`${label}: secret must be a boolean`);
+  for (const key of ["terminal", "claude", "finder"] as const) {
+    if (value[key] !== undefined && value[key] !== true)
+      throw new ProjectFileError(`${label}: ${key} must be true`);
   }
   if (value.port !== undefined && typeof value.port !== "string" && !Number.isInteger(value.port)) {
     throw new ProjectFileError(`${label}: port must be a port name or a number`);
@@ -74,7 +77,7 @@ function checkEntry(value: unknown, index: number): EntryDeclaration {
     if (!run[0].startsWith("/"))
       throw new ProjectFileError(`${label}: run[0] must be an absolute path`);
   }
-  const actions = ACTION_KEYS.filter((key) => value[key] !== undefined && value[key] !== false);
+  const actions = ACTION_KEYS.filter((key) => value[key] !== undefined);
   if (actions.length !== 1)
     throw new ProjectFileError(`${label}: exactly one action among ${ACTION_KEYS.join(", ")}`);
   if (value.app !== undefined && actions[0] !== "open")
@@ -82,11 +85,16 @@ function checkEntry(value: unknown, index: number): EntryDeclaration {
   return value as unknown as EntryDeclaration;
 }
 
+// `$schema` points editors at schemas/workspace-bar.schema.json; it is never fetched.
+export const ROOT_KEYS = new Set(["$schema", "name", "endpoints"]);
+
 /** Checks the shape of a parsed project file. */
 export function checkConfig(data: unknown): ProjectConfig {
   if (!isRecord(data)) throw new ProjectFileError("JSON object expected");
-  const unknown = Object.keys(data).filter((key) => key !== "name" && key !== "endpoints");
+  const unknown = Object.keys(data).filter((key) => !ROOT_KEYS.has(key));
   if (unknown.length > 0) throw new ProjectFileError(`unknown key ${unknown.join(", ")}`);
+  if (data.$schema !== undefined && typeof data.$schema !== "string")
+    throw new ProjectFileError("$schema must be a string");
   if (data.name !== undefined && typeof data.name !== "string")
     throw new ProjectFileError("name must be a string");
   if (!Array.isArray(data.endpoints)) throw new ProjectFileError("endpoints must be a list");

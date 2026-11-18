@@ -8,7 +8,7 @@ read_when:
 
 # Security invariants
 
-1. **No value leaves the process.** Menu and `json` output only carry `Public*` types. `display` is `host:port/path`, never credentials, query or fragment. An `Action` (which may hold a password or a copied value) stays in `Endpoint` and is dropped by `toPublic` (`collect.ts`).
+1. **No value leaves the process.** Menu, `json` and `check` output only carry `Public*` types. `display` is `host:port/path`, never credentials, query or fragment. An `Action` (which may hold a password or a copied value) stays in `Endpoint` and is dropped by `toPublic` (`collect.ts`).
 2. **Clicks carry ids only.** `clickParams` (`swiftbar.ts`) refuses any param outside `[A-Za-z0-9._-]`; ids come from `slug`/`uniqueId` (`text.ts`).
 3. **Menu text cannot inject SwiftBar parameters.** Every label, path and error goes through `menuText`: no `|`, no line break, no leading `-`.
 4. **No shell.** Programs are called by absolute path with an argument list (`system.ts`, `actions.ts`). A `run` entry requires an absolute executable. The only shell scripts are the generated launcher and plugin, whose paths go through `shellQuote`.

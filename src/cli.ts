@@ -5,20 +5,22 @@ import {
   lstatSync,
   mkdirSync,
   readdirSync,
-  readFileSync,
   rmSync,
   writeFileSync,
 } from "node:fs";
 import { homedir } from "node:os";
-import { dirname, join, resolve } from "node:path";
+import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { runAction } from "./actions.ts";
+import { renderCheck } from "./check.ts";
 import { collectProject, toPublic } from "./collect.ts";
-import { PROJECT_FILE } from "./project-config.ts";
-import { registryDir } from "./registry.ts";
+import { checkConfig, PROJECT_FILE } from "./project-config.ts";
+import { readRegistry, registryDir } from "./registry.ts";
+import { initialProjectFile } from "./scaffold.ts";
 import { addProject, readProjects, removeProject, storeDir } from "./store.ts";
 import { renderSwiftBar } from "./swiftbar.ts";
 import { isIgnoredByGit, listeningPorts, mainWorktreeOf } from "./system.ts";
+import { slug } from "./text.ts";
 import type { Snapshot } from "./types.ts";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
@@ -30,7 +32,8 @@ const USAGE = `workspace-bar — AlignFirst workspace endpoints in the menu bar
   add <folder>           follow the repository containing this folder
   remove <key|folder>    stop following it
   list                   followed repositories
-  init <folder>          create ${PROJECT_FILE} in the main worktree
+  init <folder>          create ${PROJECT_FILE} in the main worktree, from its AlignFirst ports
+  check <folder>         show the menu a repository gets, and the errors in its project file
   json                   full state as JSON (without any secret)
   swiftbar               menu in SwiftBar format
   install [folder] [--every 5m]
@@ -145,10 +148,37 @@ function init(dir: string | undefined): void {
     fail(`${PROJECT_FILE} is not ignored by git in ${main}: add .local/ to .gitignore`);
   if (lstatSync(join(main, ".local")).mode & 0o022)
     fail(`${join(main, ".local")} is writable by others: chmod go-w`);
-  writeFileSync(path, readFileSync(join(ROOT, "templates", "workspace-bar.json"), "utf8"), {
-    mode: 0o600,
-  });
+  const portNames = registryPortNames(main);
+  const file = initialProjectFile(basename(main), portNames);
+  checkConfig(file);
+  writeFileSync(path, `${JSON.stringify(file, null, 2)}\n`, { mode: 0o600 });
   process.stdout.write(`created: ${path}\n`);
+  if (portNames.length === 0) {
+    process.stdout.write(
+      "no AlignFirst ports yet (npx alignfirst dev setup): add your entries by hand\n",
+    );
+  }
+}
+
+/** Every port name the registry knows, main worktree's first; none without a registry. */
+function registryPortNames(main: string): string[] {
+  try {
+    const workspaces = readRegistry(main).workspaces.sort(
+      (a, b) => Number(b.main) - Number(a.main),
+    );
+    return [...new Set(workspaces.flatMap((workspace) => Object.keys(workspace.ports)))];
+  } catch {
+    return [];
+  }
+}
+
+function check(dir: string | undefined): void {
+  const main = resolveMain(dir);
+  const project = collectProject({ key: slug(basename(main)), path: main });
+  const file = join(main, PROJECT_FILE);
+  const report = renderCheck(toPublic(project, listeningPorts()), existsSync(file) ? file : null);
+  process.stdout.write(report.text);
+  if (!report.ok) process.exit(1);
 }
 
 async function main(args: string[]): Promise<void> {
@@ -174,6 +204,8 @@ async function main(args: string[]): Promise<void> {
       return;
     case "init":
       return init(rest[0]);
+    case "check":
+      return check(rest[0]);
     case "json":
       process.stdout.write(`${JSON.stringify(snapshot(), null, 2)}\n`);
       return;

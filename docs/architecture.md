@@ -15,13 +15,15 @@ A CLI (`src/cli.ts`) that SwiftBar calls every N seconds to print a menu, and ca
 
 | File | Role |
 | --- | --- |
-| `cli.ts` | Commands (`add`, `remove`, `list`, `init`, `json`, `swiftbar`, `open`, `install`). Only file with side effects on the user's setup. |
+| `cli.ts` | Commands (`add`, `remove`, `list`, `init`, `check`, `json`, `swiftbar`, `open`, `install`). Only file with side effects on the user's setup. |
 | `store.ts` | Followed projects: `~/.config/workspace-bar/projects.json` (`WORKSPACE_BAR_HOME` overrides). Atomic write. |
 | `registry.ts` | Read-only parser of the AlignFirst registry, `<main>/.local-wt/workspace-registry/` (`workspaces.json` v4, `dev-servers.json` v1). |
 | `system.ts` | External programs by absolute path (`git`, `lsof`, `open`, `pbcopy`, `osascript`) and parsers of their output. |
 | `project-config.ts` | Loads and validates `<main>/.local/workspace-bar.json`, expands `${ports.x}`, `${worktree}`, `${branch}`, turns entries into `Endpoint`s. |
 | `collect.ts` | Merges store + registry + `git worktree list` + project file into a `Project`; `toPublic` strips actions. |
 | `swiftbar.ts` | Renders `PublicProject[]` as SwiftBar lines. |
+| `scaffold.ts` | The project file `init` writes, from the registry's port names. |
+| `check.ts` | Text report of `check`: the menu per worktree, public data only. |
 | `actions.ts` | Runs one `Action` (no shell). |
 | `types.ts` | Internal model (`Endpoint` with its `Action`) and public model (`Public*`, no action). |
 
